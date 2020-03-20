@@ -12,6 +12,12 @@ import hashlib
 import subprocess
 import requests
 from multiprocessing import Pool
+try:
+    import localconfig
+    headers=localconfig.headers
+except:
+    print("""You need to make a file localconfig.py with the headers for HTTP requests like headers={"user-agent":"XXXXXXXXXXX","contact":"XXXXXXXXXXXXXXXXXX","org":"XXXXXXXXXXXXXXXX","note":"research_project_mean_no_harm"}""",file=sys.stderr)
+    sys.exit(-1)
 
 def gz_encode(obj):
     return sqlite3.Binary(zlib.compress(pickle.dumps(obj, pickle.HIGHEST_PROTOCOL)))
@@ -65,7 +71,7 @@ def yield_urls(initial_urls,dns_cache,req_delay_sec=20):
         time.sleep(1) #avoid craze at the end when we are down to few IPs!
 
 def dl_url(url):
-    headers={"user-agent":"turkunlp.org-research-spider","contact":"mavela@utu.fi,figint@utu.fi","org":"university_of_turku_finland","note":"research_project_mean_no_harm"}
+    headers=localconfig.headers
     try:
         r=requests.get(url,headers=headers,timeout=(6.1,15))
     except:
