@@ -12,6 +12,7 @@ import hashlib
 import subprocess
 import requests
 from multiprocessing import Pool
+from tqdm import tqdm
 try:
     import localconfig
     headers=localconfig.headers
@@ -90,7 +91,7 @@ if __name__=="__main__":
     parser.add_argument('--dnscache', default="dnscache.sqld", help='IP address cache default: %(default)s')
     parser.add_argument('--download', default="pages.sqld", help='Here is where the downloaded pages go: %(default)s')
     parser.add_argument('--r404', default="404.sqld", help='Here is where we remember pages that gave 404 etc: %(default)s')
-    parser.add_argument('URLs',help="List of URLs to download")
+    parser.add_argument('URLs',nargs="+",help="File(s) of URLs to download")
     args = parser.parse_args()
     
     #1) DNS cache setup
@@ -106,15 +107,16 @@ if __name__=="__main__":
 
     
     urls=set()
-    with open(args.URLs) as f:
-        for line in f:
-            url=line.strip().split("\t")[-1].strip()
-            if url not in result_store and url not in r404:
-                urls.add(url)
+    for f_name in args.URLs:
+        with open(f_name) as f:
+            for line in tqdm(f):
+                url=line.strip().split("\t")[-1].strip()
+                if url not in result_store and url not in r404:
+                    urls.add(url)
 
                 
-    with Pool(50) as pool:
-        for url,ip in yield_urls(urls,dns_cache):
+    with Pool(200) as pool:
+        for url,ip in tqdm(yield_urls(urls,dns_cache)):
             if ip is None:
                 #there was a DNS error
                 r404[url]="DNSERR"
