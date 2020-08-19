@@ -11,6 +11,8 @@ from urllib.parse import urlparse
 import hashlib
 import subprocess
 import requests
+import gzip
+
 from multiprocessing import Pool
 from tqdm import tqdm
 try:
@@ -108,8 +110,10 @@ if __name__=="__main__":
     
     urls=set()
     for f_name in args.URLs:
-        with open(f_name) as f:
+        with open(f_name, 'rt') as f:
             for line in tqdm(f):
+                if not line.startswith("###C:warc-target-uri"):
+                    continue
                 url=line.strip().split("\t")[-1].strip()
                 if url not in result_store and url not in r404:
                     urls.add(url)
